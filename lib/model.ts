@@ -35,7 +35,15 @@ function parseJson(text: string): unknown {
     .replace(/^```(?:json)?\s*/i, "")
     .replace(/\s*```$/, "")
     .trim();
-  return JSON.parse(cleaned);
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    // The model sometimes adds a sentence around the object.
+    const start = cleaned.indexOf("{");
+    const end = cleaned.lastIndexOf("}");
+    if (start === -1 || end <= start) throw new Error("No JSON object");
+    return JSON.parse(cleaned.slice(start, end + 1));
+  }
 }
 
 /** One call that must return JSON. On a parse/shape failure, retry once, then throw. */
@@ -44,6 +52,9 @@ async function callJson<T>(system: string, user: string, validate: (v: unknown) 
     const res = await anthropic().messages.create({
       model: MODEL,
       max_tokens: 2000,
+      // This model thinks by default, and those tokens come out of max_tokens.
+      // Between-tools leaves the 2000 for the JSON instead of cutting it off.
+      thinking: { type: "between_tools" },
       system,
       messages: [{ role: "user", content: user }],
     });

@@ -277,6 +277,7 @@ export async function runChat(turns: ChatTurn[], today: string): Promise<{ reply
     const res = await anthropic().messages.create({
       model: MODEL,
       max_tokens: 2000,
+      thinking: { type: "between_tools" },
       system: systemPrompt(today),
       tools: TOOLS,
       messages,
