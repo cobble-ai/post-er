@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/supabase";
 import { fail } from "@/lib/api";
+import { listNotes, OpError } from "@/lib/ops";
 
 export async function GET() {
-  const { data, error } = await db()
-    .from("notes")
-    .select("id, created_at, raw_text, follow_up_question, follow_up_answer, status")
-    .order("created_at", { ascending: false })
-    .limit(30);
-  if (error) return fail(error);
-  return NextResponse.json({ notes: data });
+  try {
+    return NextResponse.json({ notes: await listNotes() });
+  } catch (e) {
+    return fail(e, e instanceof OpError ? e.status : 500);
+  }
 }

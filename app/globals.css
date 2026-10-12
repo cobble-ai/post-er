@@ -228,14 +228,15 @@ input {
 
 .tabs {
   display: flex;
-  gap: 16px;
+  gap: 10px;
   margin: 0 8px 32px;
 }
 
 .tab {
   flex: 1;
-  padding-left: 8px;
-  padding-right: 8px;
+  padding-left: 4px;
+  padding-right: 4px;
+  font-size: 14px;
 }
 
 .narrow > .tabs {
@@ -472,4 +473,46 @@ input {
 .toast-error {
   color: var(--danger);
   font-weight: 600;
+}
+
+/* ---------- chat ---------- */
+
+.chat {
+  min-height: calc(100vh - 210px);
+}
+
+.chat-log {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.chat-bubble {
+  white-space: pre-wrap;
+}
+
+.chat-user {
+  align-self: flex-end;
+  max-width: 85%;
+}
+
+.chat-text {
+  white-space: pre-wrap;
+}
+
+.chat-actions {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.chat-compose {
+  position: sticky;
+  bottom: 12px;
+  margin-top: 8px;
+}
+
+.chat-input {
+  min-height: 72px;
+  max-height: 160px;
 }

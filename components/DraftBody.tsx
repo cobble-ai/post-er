@@ -16,6 +16,16 @@ export default function DraftBody({ draft, onSave }: { draft: Draft; onSave: (bo
   const save = useRef(onSave);
   save.current = onSave;
 
+  // Pick up edits made elsewhere (the chat) unless this box has unsaved typing.
+  useEffect(() => {
+    if (latest.current === saved.current && draft.body !== saved.current) {
+      setValue(draft.body);
+      latest.current = draft.body;
+      saved.current = draft.body;
+      setState("idle");
+    }
+  }, [draft.body]);
+
   // Grow the textarea to fit its text, and re-fit when its width changes.
   useLayoutEffect(() => {
     const el = area.current;

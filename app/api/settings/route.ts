@@ -1,26 +1,24 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/supabase";
 import { fail } from "@/lib/api";
+import { getSettings, OpError, saveSettings } from "@/lib/ops";
 
 export async function GET() {
-  const { data, error } = await db().from("settings").select("voice_samples, extra_rules").eq("id", 1).maybeSingle();
-  if (error) return fail(error);
-  return NextResponse.json({ settings: data ?? { voice_samples: "", extra_rules: "" } });
+  try {
+    return NextResponse.json({ settings: await getSettings() });
+  } catch (e) {
+    return fail(e, e instanceof OpError ? e.status : 500);
+  }
 }
 
 export async function PUT(req: Request) {
   try {
     const input = await req.json();
-    const { error } = await db()
-      .from("settings")
-      .upsert({
-        id: 1,
-        voice_samples: String(input.voice_samples ?? ""),
-        extra_rules: String(input.extra_rules ?? ""),
-      });
-    if (error) return fail(error);
-    return NextResponse.json({ ok: true });
+    const settings = await saveSettings({
+      voice_samples: String(input.voice_samples ?? ""),
+      extra_rules: String(input.extra_rules ?? ""),
+    });
+    return NextResponse.json({ ok: true, settings });
   } catch (e) {
-    return fail(e);
+    return fail(e, e instanceof OpError ? e.status : 500);
   }
 }

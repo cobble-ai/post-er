@@ -1,11 +1,11 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 
-const MODEL = "claude-sonnet-5-5";
+export const MODEL = "claude-sonnet-5-5";
 
 // No temperature / top_p / top_k on purpose: model defaults apply.
 let client: Anthropic | null = null;
-function anthropic() {
+export function anthropic() {
   if (!client) client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   return client;
 }

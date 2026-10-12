@@ -6,15 +6,17 @@ import { api } from "@/lib/client";
 import { todayISO } from "@/lib/dates";
 import { computeStreak } from "@/lib/schedule";
 import type { Draft, Note } from "@/lib/types";
-import CalendarTab from "./CalendarTab";
-import NotesTab from "./NotesTab";
 import BankTab from "./BankTab";
+import CalendarTab from "./CalendarTab";
+import ChatTab from "./ChatTab";
+import NotesTab from "./NotesTab";
 
-type Tab = "calendar" | "notes" | "bank";
+type Tab = "calendar" | "notes" | "bank" | "chat";
 const TABS: { id: Tab; label: string }[] = [
   { id: "calendar", label: "Calendar" },
   { id: "notes", label: "Notes" },
   { id: "bank", label: "Bank" },
+  { id: "chat", label: "Chat" },
 ];
 
 export type DraftAction =
@@ -124,8 +126,10 @@ export default function App() {
           <CalendarTab {...shared} />
         ) : tab === "notes" ? (
           <NotesTab notes={notes} toast={toast} refresh={refresh} />
-        ) : (
+        ) : tab === "bank" ? (
           <BankTab {...shared} />
+        ) : (
+          <ChatTab today={shared.today} toast={toast} onChanged={refresh} />
         )}
       </main>
 

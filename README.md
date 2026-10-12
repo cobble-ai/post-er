@@ -48,6 +48,7 @@ Redeploy after changing any environment variable. Vercel only reads them at buil
 - **Streak.** Consecutive days, ending today or yesterday, with at least one draft marked posted. A post counts toward the day it is scheduled on.
 - **Red dot.** A past day with a scheduled post that was never marked posted.
 - **Settings.** Voice samples and extra rules are appended to every drafting call.
+- **Chat.** The Chat tab can do the same things as the buttons: save a note, answer a follow-up, edit, schedule, unschedule, mark posted, discard, and change settings. The other tabs keep working on their own. A change in chat shows up there immediately.
 
 ## Layout
 
