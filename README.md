@@ -47,7 +47,7 @@ Redeploy after changing any environment variable. Vercel only reads them at buil
 - **Bank → calendar.** Schedule from the Bank, or use "Pick from bank" on an empty calendar slot. Each day has one X slot and one LinkedIn slot.
 - **Streak.** Consecutive days, ending today or yesterday, with at least one draft marked posted. A post counts toward the day it is scheduled on.
 - **Red dot.** A past day with a scheduled post that was never marked posted.
-- **Settings.** Voice samples and extra rules are appended to every drafting call.
+- **Account.** The first visit asks what the account is about, who it's for, and for a bio. Every draft has to stay inside that. An off-topic note does not become an off-topic post. Edit it later from Settings.
 - **Chat.** The Chat tab can do the same things as the buttons: save a note, answer a follow-up, edit, schedule, unschedule, mark posted, discard, and change settings. The other tabs keep working on their own. A change in chat shows up there immediately.
 
 ## Layout

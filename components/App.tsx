@@ -5,11 +5,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/client";
 import { todayISO } from "@/lib/dates";
 import { computeStreak } from "@/lib/schedule";
-import type { Draft, Note } from "@/lib/types";
+import type { Draft, Note, Settings } from "@/lib/types";
 import BankTab from "./BankTab";
 import CalendarTab from "./CalendarTab";
 import ChatTab from "./ChatTab";
 import NotesTab from "./NotesTab";
+import Onboarding from "./Onboarding";
 
 type Tab = "calendar" | "notes" | "bank" | "chat";
 const TABS: { id: Tab; label: string }[] = [
@@ -35,6 +36,7 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("calendar");
   const [drafts, setDrafts] = useState<Draft[] | null>(null);
   const [notes, setNotes] = useState<Note[] | null>(null);
+  const [settings, setSettings] = useState<Settings | null>(null);
   const [today, setToday] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -47,12 +49,14 @@ export default function App() {
 
   const refresh = useCallback(async () => {
     try {
-      const [d, n] = await Promise.all([
+      const [d, n, s] = await Promise.all([
         api<{ drafts: Draft[] }>("/api/drafts"),
         api<{ notes: Note[] }>("/api/notes"),
+        api<{ settings: Settings }>("/api/settings"),
       ]);
       setDrafts(d.drafts);
       setNotes(n.notes);
+      setSettings(s.settings);
     } catch (e) {
       toast((e as Error).message, true);
     }
@@ -87,7 +91,15 @@ export default function App() {
     [toast],
   );
 
-  const ready = drafts && notes && today;
+  if (settings && !settings.onboarded) {
+    return (
+      <div className="shell narrow">
+        <Onboarding initial={settings} onDone={() => void refresh()} />
+      </div>
+    );
+  }
+
+  const ready = drafts && notes && today && settings;
   const streak = ready ? computeStreak(drafts, today) : 0;
   const shared = ready ? { drafts, today, toast, update } : null;
 

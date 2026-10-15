@@ -22,4 +22,11 @@ export type Draft = {
   posted_at: string | null;
 };
 
-export type Settings = { voice_samples: string; extra_rules: string };
+import type { AccountProfile } from "./account";
+
+export type Settings = {
+  voice_samples: string;
+  extra_rules: string;
+  account: AccountProfile;
+  onboarded: boolean;
+};

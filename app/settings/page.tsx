@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { db } from "@/lib/supabase";
+import AccountPanel from "@/components/AccountPanel";
 import SettingsForm from "@/components/SettingsForm";
+import { getSettings } from "@/lib/ops";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const { data } = await db().from("settings").select("voice_samples, extra_rules").eq("id", 1).maybeSingle();
+  const settings = await getSettings();
   return (
     <div className="shell narrow stack">
       <header className="top">
@@ -14,9 +15,8 @@ export default async function SettingsPage() {
           ← Back
         </Link>
       </header>
-      <SettingsForm
-        initial={{ voice_samples: (data?.voice_samples as string) ?? "", extra_rules: (data?.extra_rules as string) ?? "" }}
-      />
+      <AccountPanel initial={settings} />
+      <SettingsForm initial={settings} />
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
+import { accountBrief, type AccountProfile } from "@/lib/account";
+import type { Settings } from "@/lib/types";
 
 export const MODEL = "claude-sonnet-5-5";
 
@@ -10,7 +12,7 @@ export function anthropic() {
   return client;
 }
 
-const CHECK_SYSTEM = `You review a founder's raw note before it becomes a social post. A good note contains at least one specific thing: a number, a real quote, a concrete failure, or a decision and why. If the note has one, return {"ok": true}. If it is vague (e.g. "worked on the editor today"), return {"ok": false, "question": "<one short question that pulls out the specific thing>"}. Return JSON only.`;
+const CHECK_SYSTEM = `You review a raw note before it becomes a social post for a specific account. A good note contains at least one specific thing that serves that account: a number, a real quote, a concrete failure, or a decision and why. If the note has one, return {"ok": true}. If it is vague, or it is only about something the account is not about, return {"ok": false, "question": "<one short question>"}. The question must pull out a detail for THIS account. Do not ask for more about an off-topic activity. A golf score is not the detail. The decision, the cost to the work, or the quote that belongs on the account is. Return JSON only.`;
 
 const DRAFT_SYSTEM = `You write social posts for Peter, a young founder in New Zealand building Cobble, an AI video editor for short-form creators, in public with his cofounder Sid.
 
@@ -25,6 +27,10 @@ Rules:
 - X: one idea, under 280 characters, plain and direct.
 - LinkedIn: 60–180 words, short lines, a small story with a point. Not a reformatted X post.
 - Match the voice samples if provided.
+- The note is raw material. The subject of every post is the account, not whatever activity the note happens to mention. Three angles are three different points for this audience, not three ways to retell an off-topic activity.
+- The first line is about that subject. Do not open with an off-topic activity, and do not report its score, result, or play-by-play.
+- If the note is off-topic, none of the six posts may be about that activity. Mention it in one clause at most, after the point, or leave it out. A startup account does not get a golf post. "Shot 92 yesterday" is a failed post. "The bug we'd circled for four days took twenty minutes this morning, after a day away" is the shape, and the day away does not need to be named.
+- Angle labels name the account's point, not the activity.
 
 Return JSON only:
 {"angles":[{"angle":"<5-word label>","x":"<post>","linkedin":"<post>"}, ...3 items]}`;
@@ -72,8 +78,13 @@ const isString = (v: unknown): v is string => typeof v === "string" && v.trim().
 
 export type CheckResult = { ok: true } | { ok: false; question: string };
 
-export function checkNote(note: string): Promise<CheckResult> {
-  return callJson(CHECK_SYSTEM, note, (v) => {
+function withAccount(system: string, account: AccountProfile): string {
+  const brief = accountBrief(account);
+  return brief ? `${system}\n\nAccount:\n${brief}` : system;
+}
+
+export function checkNote(note: string, account: AccountProfile): Promise<CheckResult> {
+  return callJson(withAccount(CHECK_SYSTEM, account), note, (v) => {
     const o = v as { ok?: unknown; question?: unknown };
     if (o.ok === true) return { ok: true as const };
     if (o.ok === false && isString(o.question)) return { ok: false as const, question: o.question.trim() };
@@ -85,9 +96,9 @@ export type Angle = { angle: string; x: string; linkedin: string };
 
 export function draftNote(
   note: { text: string; question?: string | null; answer?: string | null },
-  settings: { voice_samples: string; extra_rules: string },
+  settings: Settings,
 ): Promise<Angle[]> {
-  let system = DRAFT_SYSTEM;
+  let system = withAccount(DRAFT_SYSTEM, settings.account);
   if (settings.voice_samples.trim()) system += `\n\nVoice samples:\n${settings.voice_samples.trim()}`;
   if (settings.extra_rules.trim()) system += `\n\nExtra rules:\n${settings.extra_rules.trim()}`;
 

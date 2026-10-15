@@ -1,5 +1,6 @@
 import "server-only";
 import type Anthropic from "@anthropic-ai/sdk";
+import { accountBrief } from "@/lib/account";
 import { addDays, parseISODate, startOfWeek } from "@/lib/dates";
 import { MODEL, anthropic } from "@/lib/model";
 import {
@@ -120,6 +121,12 @@ Rules:
 - Scheduling onto a filled slot fails. Use date "next" to take the next empty day for that platform.
 - The streak counts consecutive days, ending today or yesterday, with at least one post marked posted.
 - Be brief. Say what you changed.`;
+}
+
+function systemFor(today: string, accountText: string): string {
+  const base = systemPrompt(today);
+  if (!accountText) return base;
+  return `${base}\n\nAccount:\n${accountText}\nDrafts must stay about this account. An off-topic note does not become an off-topic post.`;
 }
 
 function clip(draft: Draft) {
@@ -268,6 +275,7 @@ async function runTool(name: string, input: unknown, today: string): Promise<Too
 }
 
 export async function runChat(turns: ChatTurn[], today: string): Promise<{ reply: string; actions: string[]; changed: boolean }> {
+  const accountText = accountBrief((await getSettings()).account);
   const messages: Anthropic.MessageParam[] = turns.map((t) => ({ role: t.role, content: t.text }));
   const actions: string[] = [];
   let changed = false;
@@ -278,7 +286,7 @@ export async function runChat(turns: ChatTurn[], today: string): Promise<{ reply
       model: MODEL,
       max_tokens: 2000,
       thinking: { type: "between_tools" },
-      system: systemPrompt(today),
+      system: systemFor(today, accountText),
       tools: TOOLS,
       messages,
     });

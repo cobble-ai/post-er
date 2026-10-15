@@ -516,3 +516,19 @@ input {
   min-height: 72px;
   max-height: 160px;
 }
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.choice {
+  flex: 0 1 auto;
+}
+
+.choice-block {
+  width: 100%;
+  text-align: left;
+  line-height: 1.4;
+}

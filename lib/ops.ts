@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "@/lib/supabase";
 import { checkNote, draftNote } from "@/lib/model";
+import { joinStoredRules, normalizeAccount, splitStoredRules } from "@/lib/account";
 import type { Draft, Note, Platform, Settings } from "@/lib/types";
 
 export class OpError extends Error {
@@ -43,9 +44,12 @@ export async function getDraft(id: string): Promise<Draft> {
 export async function getSettings(): Promise<Settings> {
   const { data, error } = await db().from("settings").select("voice_samples, extra_rules").eq("id", 1).maybeSingle();
   throwIf(error, "Could not load settings.");
+  const stored = splitStoredRules((data?.extra_rules as string) ?? "");
   return {
     voice_samples: (data?.voice_samples as string) ?? "",
-    extra_rules: (data?.extra_rules as string) ?? "",
+    extra_rules: stored.rules,
+    account: stored.account,
+    onboarded: stored.onboarded,
   };
 }
 
@@ -54,8 +58,14 @@ export async function saveSettings(patch: Partial<Settings>): Promise<Settings> 
   const next: Settings = {
     voice_samples: patch.voice_samples ?? current.voice_samples,
     extra_rules: patch.extra_rules ?? current.extra_rules,
+    account: patch.account ? normalizeAccount(patch.account) : current.account,
+    onboarded: patch.onboarded ?? current.onboarded,
   };
-  const { error } = await db().from("settings").upsert({ id: 1, ...next });
+  const { error } = await db().from("settings").upsert({
+    id: 1,
+    voice_samples: next.voice_samples,
+    extra_rules: joinStoredRules(next.extra_rules, next.account, next.onboarded),
+  });
   throwIf(error, "Could not save settings.");
   return next;
 }
@@ -106,7 +116,7 @@ export async function addNote(raw: string): Promise<Drafted | NeedsDetail> {
   const text = raw.trim();
   if (!text) throw new OpError("Write a note first.");
 
-  const check = await checkNote(text);
+  const check = await checkNote(text, (await getSettings()).account);
   const { data: note, error } = await db()
     .from("notes")
     .insert({
