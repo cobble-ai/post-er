@@ -6,6 +6,7 @@ import { addDays, formatDay, formatRange, startOfWeek } from "@/lib/dates";
 import { slotFor } from "@/lib/schedule";
 import type { Draft, Platform } from "@/lib/types";
 import DraftBody from "./DraftBody";
+import MediaTips from "./MediaTips";
 import type { Shared } from "./App";
 
 const PLATFORMS: Platform[] = ["x", "linkedin"];
@@ -85,6 +86,7 @@ function FilledSlot({ draft, toast, update }: { draft: Draft } & Pick<Shared, "t
   return (
     <div className="stack-sm">
       <DraftBody draft={draft} onSave={(body) => update(draft.id, { body })} />
+      <MediaTips media={draft.media} />
       <div className="actions">
         <button
           className="btn"

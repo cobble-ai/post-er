@@ -120,7 +120,8 @@ Rules:
 - Copying to the clipboard is manual. When he wants the text, quote the draft so he can copy it.
 - Scheduling onto a filled slot fails. Use date "next" to take the next empty day for that platform.
 - The streak counts consecutive days, ending today or yesterday, with at least one post marked posted.
-- Be brief. Say what you changed.`;
+- Be brief. Say what you changed.
+- Media ideas on a draft are recommendations only. Never say a file, image, or video was created or attached.`;
 }
 
 function systemFor(today: string, accountText: string): string {
@@ -134,6 +135,7 @@ function clip(draft: Draft) {
     id: draft.id,
     platform: draft.platform,
     angle: draft.angle,
+    media: draft.media,
     status: draft.status,
     scheduled_date: draft.scheduled_date,
     body: draft.body,

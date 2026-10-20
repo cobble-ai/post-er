@@ -17,6 +17,7 @@ export type Draft = {
   platform: Platform;
   angle: string;
   body: string;
+  media: string[];
   status: DraftStatus;
   scheduled_date: string | null; // YYYY-MM-DD
   posted_at: string | null;

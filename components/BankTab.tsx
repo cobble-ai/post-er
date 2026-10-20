@@ -6,6 +6,7 @@ import { formatDay } from "@/lib/dates";
 import { nextEmptyDay } from "@/lib/schedule";
 import type { Draft, Platform } from "@/lib/types";
 import DraftBody from "./DraftBody";
+import MediaTips from "./MediaTips";
 import type { Shared } from "./App";
 
 type Filter = "all" | Platform;
@@ -54,6 +55,7 @@ function BankCard({ draft, drafts, today, toast, update }: { draft: Draft } & Sh
       </div>
 
       <DraftBody draft={draft} onSave={(body) => update(draft.id, { body })} />
+      <MediaTips media={draft.media} />
 
       <div className="actions">
         <button className="btn" onClick={copy}>

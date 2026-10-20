@@ -2,6 +2,7 @@ import "server-only";
 import { db } from "@/lib/supabase";
 import { checkNote, draftNote } from "@/lib/model";
 import { joinStoredRules, normalizeAccount, splitStoredRules } from "@/lib/account";
+import { packAngle, unpackAngle } from "@/lib/media";
 import type { Draft, Note, Platform, Settings } from "@/lib/types";
 
 export class OpError extends Error {
@@ -18,6 +19,11 @@ function throwIf(error: { message: string } | null, fallback: string): void {
   if (error) throw new OpError(error.message || fallback, 500);
 }
 
+function present(row: Draft): Draft {
+  const { angle, media } = unpackAngle(row.angle);
+  return { ...row, angle, media };
+}
+
 export async function listNotes(): Promise<Note[]> {
   const { data, error } = await db()
     .from("notes")
@@ -32,13 +38,13 @@ export async function listDrafts(opts?: { discarded?: boolean }): Promise<Draft[
   const query = db().from("drafts").select(DRAFT_COLUMNS).order("created_at", { ascending: false });
   const { data, error } = await (opts?.discarded ? query.eq("status", "discarded") : query.neq("status", "discarded"));
   throwIf(error, "Could not load drafts.");
-  return (data ?? []) as Draft[];
+  return ((data ?? []) as Draft[]).map(present);
 }
 
 export async function getDraft(id: string): Promise<Draft> {
   const { data, error } = await db().from("drafts").select(DRAFT_COLUMNS).eq("id", id).single();
   if (error || !data) throw new OpError("Draft not found.", 404);
-  return data as Draft;
+  return present(data as Draft);
 }
 
 export async function getSettings(): Promise<Settings> {
@@ -94,7 +100,7 @@ async function writeDrafts(
     (["x", "linkedin"] as const).map((platform, j) => ({
       note_id: noteId,
       platform,
-      angle: a.angle,
+      angle: packAngle(a.angle, platform === "x" ? a.xMedia : a.linkedinMedia),
       body: platform === "x" ? a.x : a.linkedin,
       status: "bank",
       created_at: new Date(base - (i * 2 + j)).toISOString(),
@@ -109,7 +115,7 @@ async function writeDrafts(
     .eq("id", noteId);
   throwIf(noteError, "Could not update the note.");
 
-  return { status: "drafted", count: rows.length, drafts: (data ?? []) as Draft[] };
+  return { status: "drafted", count: rows.length, drafts: ((data ?? []) as Draft[]).map(present) };
 }
 
 export async function addNote(raw: string): Promise<Drafted | NeedsDetail> {
@@ -177,7 +183,7 @@ export async function updateDraft(id: string, input: DraftChange): Promise<Draft
 
   const { data, error } = await supabase.from("drafts").update(patch).eq("id", id).select(DRAFT_COLUMNS).single();
   if (error || !data) throw new OpError(error?.message || "Draft not found.", error ? 500 : 404);
-  return data as Draft;
+  return present(data as Draft);
 }
 
 export function isPlatform(v: string): v is Platform {

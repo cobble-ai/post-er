@@ -31,9 +31,10 @@ Rules:
 - The first line is about that subject. Do not open with an off-topic activity, and do not report its score, result, or play-by-play.
 - If the note is off-topic, none of the six posts may be about that activity. Mention it in one clause at most, after the point, or leave it out. A startup account does not get a golf post. "Shot 92 yesterday" is a failed post. "The bug we'd circled for four days took twenty minutes this morning, after a day away" is the shape, and the day away does not need to be named.
 - Angle labels name the account's point, not the activity.
+- For each post, recommend exactly 3 media options to publish alongside it. Mix images and videos. Each option is one sentence describing what to shoot or show. Recommend only. No URLs, no files, no claims that the media exists.
 
 Return JSON only:
-{"angles":[{"angle":"<5-word label>","x":"<post>","linkedin":"<post>"}, ...3 items]}`;
+{"angles":[{"angle":"<5-word label>","x":"<post>","x_media":["<option>","<option>","<option>"],"linkedin":"<post>","linkedin_media":["<option>","<option>","<option>"]}, ...3 items]}`;
 
 function parseJson(text: string): unknown {
   const cleaned = text
@@ -92,7 +93,12 @@ export function checkNote(note: string, account: AccountProfile): Promise<CheckR
   });
 }
 
-export type Angle = { angle: string; x: string; linkedin: string };
+export type Angle = { angle: string; x: string; linkedin: string; xMedia: string[]; linkedinMedia: string[] };
+
+function mediaList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(isString).map((item) => item.trim()).slice(0, 3);
+}
 
 export function draftNote(
   note: { text: string; question?: string | null; answer?: string | null },
@@ -113,7 +119,13 @@ export function draftNote(
     return angles.slice(0, 3).map((a) => {
       const o = a as Record<string, unknown>;
       if (!isString(o.angle) || !isString(o.x) || !isString(o.linkedin)) throw new Error("bad shape");
-      return { angle: o.angle.trim(), x: o.x.trim(), linkedin: o.linkedin.trim() };
+      return {
+        angle: o.angle.trim(),
+        x: o.x.trim(),
+        linkedin: o.linkedin.trim(),
+        xMedia: mediaList(o.x_media),
+        linkedinMedia: mediaList(o.linkedin_media),
+      };
     });
   });
 }

@@ -532,3 +532,13 @@ input {
   text-align: left;
   line-height: 1.4;
 }
+
+.media-list {
+  margin: 6px 0 0;
+  padding-left: 1.2em;
+  font-size: 14px;
+}
+
+.media-list li + li {
+  margin-top: 6px;
+}
